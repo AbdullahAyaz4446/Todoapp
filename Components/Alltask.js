@@ -12,6 +12,8 @@ const Alltask = () => {
     const [newTask, setNewTask] = useState({ title: '', description: '' });
     const [searchQuery, setSearchQuery] = useState('');
     const [searchInputRef, setSearchInputRef] = useState(null);
+    const [updatetoggle, setupdatetoggle] = useState(false);
+
 
     const filteredTasks = tasks.filter(task =>
         task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -27,10 +29,12 @@ const Alltask = () => {
         }
     };
 
+
     const addTask = async () => {
         if (newTask.title.trim() === '') return;
         try {
-            const res = await axios.post(`${BASE_URL}/add-data`, newTask);
+            console.log('Adding new task:', newTask);
+            const res = await axios.post(`${BASE_URL}/adddata`, newTask);
             setTasks([...tasks, res.data]);
             setNewTask({ title: '', description: '' });
             setShowAddModal(false);
@@ -38,6 +42,7 @@ const Alltask = () => {
             console.log('Error adding task:', error);
         }
     };
+
 
     const deleteTask = async () => {
         try {
@@ -49,11 +54,12 @@ const Alltask = () => {
         }
     };
 
+
     const toggleComplete = async (taskId) => {
         const task = tasks.find(t => t._id === taskId);
         if (!task) return;
         try {
-            const res = await axios.put(`${BASE_URL}/${taskId}`, {
+            const res = await axios.put(`${BASE_URL}/complete${taskId}`, {
                 completed: !task.completed,
             });
             setTasks(tasks.map(t => (t._id === taskId ? res.data : t)));
@@ -71,6 +77,7 @@ const Alltask = () => {
     useEffect(() => {
         fetchTasks();
     }, []);
+
 
     return (
         <View style={styles.container}>
@@ -112,6 +119,12 @@ const Alltask = () => {
                                 <Text style={styles.completeButtonText}>{item.completed ? 'Completed' : 'Complete'}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
+                                onPress={() => { setShowAddModal(true), setupdatetoggle(true); }}
+                                style={styles.deleteButton}
+                            >
+                                <Ionicons name="pencil" size={20} color="#ff6b6b" />
+                            </TouchableOpacity>
+                            <TouchableOpacity
                                 onPress={() => {
                                     setSelectedTaskId(item._id);
                                     setShowDeleteModal(true);
@@ -145,13 +158,11 @@ const Alltask = () => {
                     </View>
                 </TouchableWithoutFeedback>
             </Modal>
-
-            {/* Add Task Modal */}
             <Modal transparent visible={showAddModal} animationType="fade">
-                <TouchableWithoutFeedback onPress={() => setShowAddModal(false)}>
+                <TouchableWithoutFeedback onPress={() => { setShowAddModal(false), setupdatetoggle(false); }}>
                     <View style={styles.modalOverlay}>
                         <View style={styles.addModalContent}>
-                            <Text style={styles.modalTitle}>Add New Task</Text>
+                            <Text style={styles.modalTitle}>{updatetoggle ? "Update Task" : "Add New Task"}</Text>
                             <TextInput
                                 style={styles.input}
                                 placeholder="Task title"
@@ -174,6 +185,7 @@ const Alltask = () => {
                                     onPress={() => {
                                         setNewTask({ title: '', description: '' });
                                         setShowAddModal(false);
+                                        setupdatetoggle(false);
                                     }}
                                 >
                                     <Text style={styles.buttonText}>Cancel</Text>
@@ -183,7 +195,9 @@ const Alltask = () => {
                                     onPress={addTask}
                                     disabled={newTask.title.trim() === ''}
                                 >
-                                    <Text style={styles.buttonText}>Add Task</Text>
+                                    <Text style={styles.buttonText}>
+                                        {updatetoggle ? "Update" : "Add Task"}
+                                    </Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
